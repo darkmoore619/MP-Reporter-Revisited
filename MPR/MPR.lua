@@ -533,7 +533,9 @@ local function TimerHandler(name, ...)
             table.insert(arraySelf,unit(Target).." ("..numformat(Data.Amount)..")")
             table.insert(arrayRaid,Target.." ("..numformat(Data.Amount)..")")
         end
-        MPR:HandleReport(string.format("%s hits: %s",spell(SpellID,true),table.concat(arrayRaid,", ")), string.format("%s hits: %s",spell(SpellID),table.concat(arraySelf,", ")))
+        if MPR:IsSpellReported(nameSpellAOEDamage) then
+            MPR:HandleReport(string.format("%s hits: %s",spell(SpellID,true),table.concat(arrayRaid,", ")), string.format("%s hits: %s",spell(SpellID),table.concat(arraySelf,", ")))
+        end
         
         if MPR_Penalties.PenaltySpells[nameSpellAOEDamage] then
             MPR_Penalties:HandleHits(targetsSpellAOEDamage,MPR_Penalties.PenaltySpells[nameSpellAOEDamage][1],SpellID)
@@ -549,10 +551,14 @@ local function TimerHandler(name, ...)
             table.insert(arrayRaid,Target)
         end
         table.wipe(targetsAura)
-        MPR:HandleReport(string.format("%s on: %s",spell(SPELL,true),table.concat(arrayRaid,", ")), string.format("%s on: %s",spell(SPELL),table.concat(array,", ")))
+        if MPR:IsSpellReported("L:"..tostring(MPR:SpellKey(SPELL))) then
+            MPR:HandleReport(string.format("%s on: %s",spell(SPELL,true),table.concat(arrayRaid,", ")), string.format("%s on: %s",spell(SPELL),table.concat(array,", ")))
+        end
     elseif name == "Heroism" then
         local SPELL = ...
-        if #targetsHeroism > 0 then
+        if not MPR:IsSpellReported("Heroism") then
+            -- filtered out
+        elseif #targetsHeroism > 0 then
             MPR:HandleReport(string.format("%s casts %s (%i/%i players affected)",casterHeroism,spell(SPELL,true),#targetsHeroism,GetNumRaidMembers()), string.format("%s casts %s (%i/%i players affected)",unit(casterHeroism),spell(SPELL),#targetsHeroism,GetNumRaidMembers()))
         else
             MPR:ReportCast(casterHeroism,SPELL)
@@ -655,6 +661,8 @@ function SlashCmdList.MPR(msg, editbox)
         MPR_Timers:Toggle()
     elseif msg == "to" then
         MPR_Timers_Options:Toggle()
+    elseif msg == "spells" or msg == "sf" then
+        MPR_SpellFilter:Toggle()
     elseif msg == "ai" then
         MPR:SelfReport("Instance: |r|cFF00CCFF|HMPR:AuraInfo:ICC:1|h[Icecrown Citadel]|h|r "..
                                    "|cFF3CAA50|HMPR:AuraInfo:TOC:13|h[Trial of the Crusader]|h|r "..
@@ -1151,14 +1159,14 @@ function MPR:COMBAT_LOG_EVENT_UNFILTERED(...)
             elseif sourceName == "Halion" then
                 if spellName == "Fiery Combustion" then
                     MPR_Timers:FieryCombustion()
-                    self:Whisper(destName, GetSpellLink(spellId).." on you! Run to the wall!!")
+                    self:WhisperSpell("Fiery Combustion", destName, GetSpellLink(spellId).." on you! Run to the wall!!")
                 elseif spellName == "Soul Consumption" then
                     MPR_Timers:SoulConsumption()
-                    self:Whisper(destName, GetSpellLink(spellId).." on you! Run to the wall!!")
+                    self:WhisperSpell("Soul Consumption", destName, GetSpellLink(spellId).." on you! Run to the wall!!")
                 end
             end
         
-            if spellName == "Heroism" and UnitInRaid(sourceName) then
+            if (spellName == "Heroism" or spellName == "Bloodlust") and UnitInRaid(sourceName) then
                 table.wipe(targetsHeroism)
                 casterHeroism = sourceName
                 self:ScheduleTimer("Heroism", TimerHandler, 1, spellId)
@@ -1171,16 +1179,16 @@ function MPR:COMBAT_LOG_EVENT_UNFILTERED(...)
             end
             
             if spellName == "Necrotic Plague" then
-                self:Whisper(destName, GetSpellLink(spellId).." on you! Run to a Shambling Horror!!")
+                self:WhisperSpell("Necrotic Plague", destName, GetSpellLink(spellId).." on you! Run to a Shambling Horror!!")
             elseif sourceName == "Shadow Trap" and spellName == "Shadow Trap" then
-                self:RaidReport(GetSpellLink(spellId)) --self:RaidReport("{rt8}{rt8}{rt8} "..GetSpellLink(spellId).." summoned! {rt8}{rt8}{rt8}")
+                if self:IsSpellReported("SP:Shadow Trap") then self:RaidReport(GetSpellLink(spellId)) end --self:RaidReport("{rt8}{rt8}{rt8} "..GetSpellLink(spellId).." summoned! {rt8}{rt8}{rt8}")
             elseif spellName == "Swarming Shadows" then
-                self:Whisper(destName, GetSpellLink(spellId).." on you! Run along walls!!")
+                self:WhisperSpell("Swarming Shadows", destName, GetSpellLink(spellId).." on you! Run along walls!!")
             elseif spellId == 74502 then
-                self:Whisper(destName, GetSpellLink(spellId).." on you! Run away!!")
+                self:WhisperSpell(74502, destName, GetSpellLink(spellId).." on you! Run away!!")
             end
         elseif event == "SPELL_CREATE" then
-            if contains(spellsCreate,destName,true) then
+            if contains(spellsCreate,destName,true) and self:IsSpellReported(destName) then
                 self:ReportSpellCreate(sourceName,spellId)
                 self:CancelTimer(destName)
                 self:ScheduleTimer(destName, TimerHandler, spellsCreate[destName]-30, spellId)
@@ -1241,7 +1249,7 @@ function MPR:COMBAT_LOG_EVENT_UNFILTERED(...)
                 if spellName == "Pain and Suffering" and UnitInRaid(destName) then 
                     local Debuff, _, _, Count = UnitDebuff(destName,"Pain and Suffering")
                     if Debuff and Count == 5 then
-                        self:Whisper(destName, GetSpellLink(spellId).." (5 stacks) on you! Spread!! ("..amount.." damage)")
+                        self:WhisperSpell("Pain and Suffering", destName, GetSpellLink(spellId).." (5 stacks) on you! Spread!! ("..amount.." damage)")
                     end
                 end
                 
@@ -1291,9 +1299,9 @@ function MPR:COMBAT_LOG_EVENT_UNFILTERED(...)
             
             if spellName == "Frost Beacon" then
                 MPR_Timers:FrostBeacon()
-                self:Whisper(destName, GetSpellLink(70126).." on you! Run away from others!!")
+                self:WhisperSpell("Frost Beacon", destName, GetSpellLink(70126).." on you! Run away from others!!")
             elseif spellName == "Gaseous Bloat" and UnitIsPlayer(destName) then
-                self:Whisper(destName, GetSpellLink(spellId).." on you! Kite it!!")
+                self:WhisperSpell("Gaseous Bloat", destName, GetSpellLink(spellId).." on you! Kite it!!")
             elseif spellId == 33786 then
                 self:ReportCastOnTarget(sourceName,destName,spellId)
             end
@@ -1301,28 +1309,28 @@ function MPR:COMBAT_LOG_EVENT_UNFILTERED(...)
             if sourceName == "Sindragosa" and spellName == "Instability" and UnitInRaid(destName) then 
                 local Debuff, _, _, Count = UnitDebuff(destName,"Instability")
                 if Debuff == "Instability" and Count == 8 then
-                    self:Whisper(destName, GetSpellLink(spellId).." (8 stacks) on you! Stop casting!!")
+                    self:WhisperSpell("Instability", destName, GetSpellLink(spellId).." (8 stacks) on you! Stop casting!!")
                 end
             elseif sourceName == "Sindragosa" and spellName == "Chilled to the Bone" and UnitInRaid(destName) then 
                 local Debuff, _, _, Count = UnitDebuff(destName,"Chilled to the Bone")
                 if Debuff and Count == 10 then
-                    self:Whisper(destName, GetSpellLink(spellId).." (10 stacks) on you! Stop attacking!!")
+                    self:WhisperSpell("Chilled to the Bone", destName, GetSpellLink(spellId).." (10 stacks) on you! Stop attacking!!")
                 end
             end
             
             if contains(aurasAppliedOnTarget,spellName) and UnitIsPlayer(destName) then
                 if destName == UnitName("player") and contains(sayAuraOnMe,spellName) then
-                    self:Say(sayAuraOnMe[spellName])
+                    self:SaySpell(spellName, sayAuraOnMe[spellName])
                 end
                 self:ReportAppliedOnTarget(spellId,destName)
             elseif contains(aurasAppliedOnTargets,spellName) then
                 if destName == UnitName("player") and contains(sayAuraOnMe,spellName) then
-                    self:Say(sayAuraOnMe[spellName])
+                    self:SaySpell(spellName, sayAuraOnMe[spellName])
                 end
                 table.insert(targetsAura,destName)
                 self:CancelTimer("Aura Targets")
                 self:ScheduleTimer("Aura Targets", TimerHandler, 0.5, spellId)
-            elseif spellName == "Heroism" and sourceName == casterHeroism and UnitIsPlayer(destName) then
+            elseif (spellName == "Heroism" or spellName == "Bloodlust") and sourceName == casterHeroism and UnitIsPlayer(destName) then
                 table.insert(targetsHeroism,destName)
             -- 20: Saviana Ragefire timers
             elseif spellName == "Enrage" and destName == "Saviana Ragefire" then
@@ -1333,12 +1341,12 @@ function MPR:COMBAT_LOG_EVENT_UNFILTERED(...)
             elseif spellName == "Essence of the Blood Queen" and UnitIsPlayer(destName) then
                 --self:Whisper(destName, "Bite on you! (+100% dmg)")
             elseif spellName == "Frenzied Bloodthirst" and UnitIsPlayer(destName) then
-                self:Whisper(destName, "You have to bite!!")
+                self:WhisperSpell("Frenzied Bloodthirst", destName, "You have to bite!!")
             elseif spellName == "Uncontrollable Frenzy" and UnitIsPlayer(destName) then
                 --self:Whisper(destName, "You failed to bite.")
-                self:RaidReport(string.format("%s failed to bite.", destName))
+                if self:IsSpellReported("Uncontrollable Frenzy") then self:RaidReport(string.format("%s failed to bite.", destName)) end
             elseif spellName == "Touch of Jaraxxus" then -- Jaraxxus: Touch of Jaraxxus
-                self:Whisper(destName, GetSpellLink(spellId).." on you! Run away till debuff is gone!!")
+                self:WhisperSpell("Touch of Jaraxxus", destName, GetSpellLink(spellId).." on you! Run away till debuff is gone!!")
             elseif spellName == "Incinerate Flesh" then -- Jaraxxus: Incinerate Flesh
                 self:ReportAppliedOnTarget(spellId,destName)
             end
@@ -1411,45 +1419,55 @@ end
 
 --[[ SWING_DAMAGE, SPELL_DAMAGE, SPELL_PERIODIC_DAMAGE, SPELL_HEAL, SPELL_PERIODIC_HEAL ]]--
 function MPR:ReportSpellDamage(SPELL,TARGET,AMOUNT,CRIT) -- [Spell] hits Target for Amount [(Critical)].
+    if not self:IsSpellReported("D:"..tostring(self:SpellKey(SPELL))) then return end
     local CRIT = CRIT and " (Critical)" or ""
     self:HandleReport(nil, string.format("%s hits %s for %s%s",spell(SPELL),unit(TARGET),numformat(AMOUNT),CRIT))
 end
 function MPR:ReportSpellHeal(SPELL,TARGET,AMOUNT,CRIT) -- [Spell] heals Target for Amount [(Critical)].
+    if not self:IsSpellReported("H:"..tostring(self:SpellKey(SPELL))) then return end
     local CRIT = CRIT and " (Critical)" or ""
     self:HandleReport(string.format("%s heals %s for %s%s",spell(SPELL,true),TARGET,numformat(AMOUNT),CRIT), string.format("%s heals %s for %s%s",spell(SPELL),unit(TARGET),numformat(AMOUNT),CRIT))
 end
 function MPR:ReportDamageOnTarget(UNIT,TARGET,SPELL) -- Unit damages Target with [Spell].
+    if not self:IsSpellReported(self:SpellKey(SPELL)) then return end
     self:HandleReport(nil, self:SelfReport(string.format("%s damages %s with %s",unit(UNIT),unit(TARGET),spell(SPELL))))
     -- string.format("%s damages %s with %s",UNIT,TARGET,spell(SPELL,true))
 end
 
 --[[ SPELL_SUMMON ]]--
 function MPR:ReportSummon(UNIT,TARGET,SPELL) -- Unit summons Target. [Spell].
+    if not self:IsSpellReported(TARGET) then return end
     self:HandleReport(string.format("%s summons %s (%s)",UNIT,TARGET,spell(SPELL,true)), string.format("%s summons %s (%s)",unit(UNIT),unit(TARGET),spell(SPELL)))
 end
 function MPR:ReportBossSummon(TARGET,SPELL) -- Target summoned. [Spell]
+    if not self:IsSpellReported(TARGET) then return end
     self:HandleReport(string.format("%s summoned. (%s)",TARGET,spell(SPELL,true)), string.format("%s summoned. (%s)",unit(TARGET),spell(SPELL)))
 end
 
 --[[ SPELL_CAST_START, SPELL_CAST_SUCCESS ]]--
 function MPR:ReportCast(UNIT,SPELL) -- Unit casts [Spell].
+    if not self:IsSpellReported(self:SpellKey(SPELL)) then return end
     self:HandleReport(string.format("%s casts %s",UNIT,spell(SPELL,true)), string.format("%s casts %s",unit(UNIT),spell(SPELL)))
 end
 function MPR:ReportCastOnTarget(UNIT,TARGET,SPELL) -- Unit casts [Spell] on Target.
+    if not self:IsSpellReported(self:SpellKey(SPELL)) then return end
     self:HandleReport(string.format("%s casts %s on %s",UNIT,spell(SPELL,true),TARGET), string.format("%s casts %s on %s",unit(UNIT),spell(SPELL),unit(TARGET)))
 end
 
 --[[ SPELL_AURA_APPLIED ]]--
 function MPR:ReportBossCastOnTarget(SPELL,TARGET) -- [Spell] on Target.
+    if not self:IsSpellReported(self:SpellKey(SPELL)) then return end
     self:HandleReport(string.format("%s on %s",spell(SPELL,true),TARGET), string.format("%s on %s",spell(SPELL),unit(TARGET)))
 end
 
 function MPR:ReportAppliedOnTarget(SPELL,TARGET) -- [Spell] applied on Target.    
+    if not self:IsSpellReported(self:SpellKey(SPELL)) then return end
     self:HandleReport(string.format("%s applied on %s",spell(SPELL,true),TARGET), string.format("%s applied on %s",spell(SPELL),unit(TARGET)))
 end
 
 --[[ SPELL_AURA_APPLIED_DOSE ]]--
 function MPR:ReportStacksOnTarget(TARGET,SPELL,AMOUNT) -- Target has Amount stacks of [Spell].
+    if not self:IsSpellReported(self:SpellKey(SPELL)) then return end
     self:HandleReport(string.format("%s has %i stacks of %s",TARGET,AMOUNT,spell(SPELL,true)), string.format("%s has %i stacks of %s",unit(TARGET),AMOUNT,spell(SPELL)))
 end
 
@@ -1465,6 +1483,7 @@ end
 
 --[[ SPELL_RESURRECT ]]-- only dudu ress
 function MPR:ReportCombatResurrect(UNIT,SPELL,TARGET) -- Unit prepares [Spell].
+    if not self:IsSpellReported(self:SpellKey(SPELL)) then return end
     self:HandleReport(string.format("%s resurrects %s (%s)",UNIT,TARGET,spell(SPELL,true)), string.format("%s resurrects %s (%s)",unit(UNIT),unit(TARGET),spell(SPELL)))
 end
 
@@ -1593,6 +1612,13 @@ function MPR:UpdateBackdrop()
     MPR_Options:SetBackdrop(Backdrop)
     MPR_Options:SetBackdropColor(unpack(BackdropColor))
     MPR_Options:SetBackdropBorderColor(BackdropBorderColor.R/255, BackdropBorderColor.G/255, BackdropBorderColor.B/255)
+    -- MPR Spell Filter
+    if MPR_SpellFilter and MPR_SpellFilter.Title then
+        MPR_SpellFilter.Title:SetText("|cFF"..self.Colors["TITLE"].."MP Reporter|r - Reported Spells")
+        MPR_SpellFilter:SetBackdrop(Backdrop)
+        MPR_SpellFilter:SetBackdropColor(unpack(BackdropColor))
+        MPR_SpellFilter:SetBackdropBorderColor(BackdropBorderColor.R/255, BackdropBorderColor.G/255, BackdropBorderColor.B/255)
+    end
     -- MPR Aura Info
     MPR_AuraInfo.Title:SetText("|cff"..self.Colors["TITLE"].."MP Reporter|r - Aura Info")
     MPR_AuraInfo:SetBackdrop(Backdrop)
@@ -1690,6 +1716,8 @@ function MPR:ADDON_LOADED(addon)
     self:DefineSetting("T_RAID", true)
     self:DefineSetting("TIMER_ANNOUNCES", MPR_Timers.DefaultTimerAnnounces)
     self:DefineSetting("UPDATEFREQUENCY", 0.1)
+    self:DefineSetting("SPELL_FILTER", {})
+    self:DefineSetting("SPELL_IDS", {})
     self:DefineSetting("CCL_ONLOAD", true)
     self:DefineSetting("ICONS", false)
     self:DefineSetting("REPORT_LOOT", false)
@@ -1736,6 +1764,7 @@ function MPR:ADDON_LOADED(addon)
     
     self:Initialize()
     MPR_Options:Initialize()
+    MPR_SpellFilter:Initialize()
     MPR_AuraInfo:Initialize()
     MPR_Timers:Initialize()
     MPR_Penalties:Initialize()

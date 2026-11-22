@@ -7,6 +7,7 @@
 Dongle.lua
 MPR.lua
 MPR_Options.lua
+MPR_SpellFilter.lua
 MPR_AuraInfo.lua
 MPR_Timers.lua
 MPR_Penalties.lua

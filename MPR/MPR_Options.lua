@@ -56,6 +56,14 @@ function MPR_Options:Initialize()
     MPR_Options:NewCB("Dispels",nil,"REPORT_DISPELS",14,-71)            -- [ ] Dispels
     MPR_Options:NewCB("Mass Dispels",nil,"REPORT_MASSDISPELS",89,-71)    -- [ ] Mass Dispels
     
+    -- Opens the spell selection page
+    local BtnSpells = CreateFrame("button","BtnSelectSpells", MPR_Options, "UIPanelButtonTemplate")
+    BtnSpells:SetHeight(16)
+    BtnSpells:SetWidth(100)
+    BtnSpells:SetPoint("TOPLEFT", 100, -58)
+    BtnSpells:SetText("Select spells...")
+    BtnSpells:SetScript("OnClick", function(self) MPR_SpellFilter:Toggle() end)
+    
     -- Report in:
     MPR_Options:NewFS("Reporting in:","3CB371",16,-90)
     MPR_Options:NewCB("Dungeon",nil,"REPORTIN_PARTY",14,-101)
