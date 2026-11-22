@@ -3,6 +3,7 @@ An addon for World of Warcraft: Wrath of the Lich King (3.3.5a 12340) that annou
 
 Complete list of commands:
  • MPR Options - /MPR
+ • MPR Spell selection - /MPR SPELLS
  • MPR Aura Info - /MPR AI, /MPR AI <bossnum>
  • MPR Timers - /MPR T, /MPR TIMERS
  • MPR TImer options - /MPR TO
@@ -10,6 +11,44 @@ Complete list of commands:
  • Clear combat log entries - /MPR CCL, /MPR CLEAR
  • Clear death log entries - /MPR CDL
  
+MPR Spell Selection (command /MPR SPELLS, or the "Select spells..." button in /MPR) lets you choose, spell by spell, what the addon announces.
+ • Everything is reported by default. Uncheck a spell to stop it from being announced; your choices are saved between sessions.
+ • Spells are labelled Player (blue) or Encounter (red). Player spells are grouped by type. Encounter spells are grouped by instance, then by boss, and sorted alphabetically.
+ • Every spell has its icon and a tooltip: the spell description, what the addon reports for it, and the instance and boss it belongs to.
+ • Some spells have several separate reports, each with its own checkbox, shown as a coloured tag after the name:
+    (list) one combined line naming every affected player    (damage)/(heal) each damage tick or heal    (AOE) one line listing everyone hit
+    (stacks) stack count on a player    (summon)/(spawn) summoned adds and spawned objects    (failed bite) Lana'thel failed bite
+    (whisper) warning whispered to the affected player    (say) line you say in /say when the aura lands on you
+ • Each section (Player / Encounter) has its own All / None buttons, and there are Select all / Select none buttons for the whole page.
+ • Only spell announcements are affected. Timers, Aura Info, DKP penalties, dispel reports, death reports and killing blows keep their own options.
+ • Icons and tooltips need the spell to be known by the game client. Spells that can't be resolved show a question mark until they have been seen in combat once.
+Here's a complete list of spells that can be reported:
+ • PLAYER SPELLS •
+    • Raid buffs and consumables: Blessing of Forgotten Kings, Drums of the Wild, Heroism/Bloodlust, Runescroll of Fortitude
+    • Class abilities: Cyclone, Hand of Protection, Rebirth
+    • Feasts and rituals: Fish Feast, Great Feast, Ritual of Refreshment, Ritual of Souls
+ • ENCOUNTER SPELLS •
+  TRIAL OF THE CRUSADER
+    • Northrend Beasts: Slime Pool (summon), Trample (AOE)
+    • Lord Jaraxxus: Incinerate Flesh, Touch of Jaraxxus (whisper)
+    • Twin Val'kyr: Dark Vortex, Light Vortex
+  ICECROWN CITADEL
+    • Lord Marrowgar: Impaled (list, say)
+    • Lady Deathwhisper: Dark Martyrdom (AOE), Deathchill Blast (AOE), Dominate Mind (say), Shadow Cleave (AOE), Vengeful Blast (AOE), Vengeful Shade (summon)
+    • Deathbringer Saurfang: Rune of Blood (target, heal)
+    • Festergut: Gas Spore (list), Vile Gas (list, single target)
+    • Rotface: Unstable Ooze (stacks), Unstable Ooze Explosion (AOE), Vile Gas - heroic (list, single target)
+    • Professor Putricide: Choking Gas Explosion (AOE), Gaseous Bloat (aura, say, whisper), Malleable Goo (AOE), Unbound Plague, Volatile Ooze Adhesive (aura, say)
+    • Blood-Queen Lana'thel: Essence of the Blood Queen (say), Frenzied Bloodthirst (say, whisper), Swarming Shadows (target, whisper), Uncontrollable Frenzy (failed bite)
+    • Sindragosa: Blistering Cold (AOE), Chilled to the Bone (whisper), Frost Bomb (AOE), Frost Beacon (list, say, whisper), Instability (whisper)
+    • The Lich King: Defile (AOE), Necrotic Plague (target, damage, whisper), Pain and Suffering (whisper), Quake, Remorseless Winter, Shadow Trap (AOE, spawn), Soul Reaper
+  THE RUBY SANCTUM
+    • Saviana Ragefire: Enrage
+    • Baltharus the Warborn: Enervating Brand (whisper)
+    • General Zarithrian: Cleave Armor (stacks)
+    • Halion: Fiery Combustion (aura, whisper), Soul Consumption (aura, whisper)
+ Whispers need the Whisper option and /say lines need the Say option in /MPR. Announcements go to the channels enabled there (Self, Raid).
+
 MPR Aura Info (command /MPR AI or /MPR <bossnum>) lets you track active auras (buffs and debuffs) on your raid members.
 Here's a complete list of auras that can be tracked during encounters:
  • ICECROWN CITADEL •
@@ -92,3 +131,19 @@ MPR Death Report (configured in options, command /MPR) is a system announcing pl
 Another useful thing from the addon users, if you whisper them "raidlocks" or "raid locks", the addon will automatically whisper back list of instances and modes you are locked to.
 
 To see more features the addon offers, see the options frame ingame.
+
+VERSION HISTORY
+
+v3.0R
+ • NEW: Spell selection page (/MPR SPELLS or the "Select spells..." button in /MPR) to choose which spells are reported.
+ • NEW: Spells are labelled Player or Encounter. Encounter spells are sorted by instance (Trial of the Crusader, Icecrown Citadel, The Ruby Sanctum), then by boss, then alphabetically. Player spells are grouped by type.
+ • NEW: Spell icons and tooltips on every row (spell description, what is reported, and the instance/boss it belongs to).
+ • NEW: Separate switches for each kind of report of a spell: chat announcement, damage ticks, heals, combined target lists, summons and spawns, whispers to the affected player and /say lines.
+ • NEW: All / None buttons for the Player and Encounter sections, plus Select all / Select none for the whole page.
+ • CHANGED: Horde Bloodlust is reported the same way as Heroism and shares its checkbox.
+ • NOTE: Choices are saved in the addon's saved variables (MPR_Settings), shared by all your characters. Timers, Aura Info, DKP penalties, dispel reports, death reports and killing blows are not affected by the spell selection.
+
+v2.90R
+ • Death reporting fixed, no more false information
+ • Timer options
+ • Ruby Sanctum timers
