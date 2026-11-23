@@ -1748,10 +1748,17 @@ function MPR:ADDON_LOADED(addon)
     self:DefineSetting("PENALTIES_LIST_SHOWSKIPPED", false)
     self:DefineSetting("PENALTIES_LIST_SHOWIGNORED", false)
     
-    self:DefineSetting("BACKDROP", {
-        bgFile = "Interface\\TabardFrame\\TabardFrameBackground", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        edgeSize = 25, insets = {left = 4, right = 4, top = 4, bottom = 4}
-    })
+    -- self:DefineSetting("BACKDROP", {
+        -- bgFile = "Interface\\TabardFrame\\TabardFrameBackground", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        -- edgeSize = 25, insets = {left = 4, right = 4, top = 4, bottom = 4}
+    -- })
+	-- Assigned directly (not DefineSetting) so existing saved variables get the square border too
+	self.Settings["BACKDROP"] = {
+		bgFile = "Interface\\TabardFrame\\TabardFrameBackground",
+		edgeFile = "Interface\\Buttons\\WHITE8X8",
+		edgeSize = 1,
+		insets = {left = 1, right = 1, top = 1, bottom = 1},
+}
     self:DefineSetting("BACKDROPCOLOR", {0, 0, 0, 0.7})
     self:DefineSetting("BACKDROPBORDERCOLOR", {R = 30, G = 144, B = 255})
     
