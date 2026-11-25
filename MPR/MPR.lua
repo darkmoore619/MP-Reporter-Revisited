@@ -1,7 +1,7 @@
 MPR = CreateFrame("frame","MPRFrame")
-MPR.Version = "v3.0R"
---MPR.Special = {"Deathwing:Herbaliist:A"}
-MPR.VersionNotes = {"Spell selection page: choose which spells are reported (/MPR SPELLS or the Select spells... button)", "Spells sorted as Player or Encounter, by instance and boss, with icons and tooltips", "Separate switches for chat reports, damage/heal ticks, target lists, spawns, whispers and /say", "Bloodlust is reported like Heroism"}
+MPR.Version = "v3.1R"
+MPR.VersionNotes = {"Opacity and Scale sliders at the bottom of the options window (Scale resizes all MPR windows)", "Dispels and Mass Dispels moved to the Select spells window, under Dispels", "SeaGreen border color removed"}
+
 local ClassColors = {["DEATHKNIGHT"] = "C41F3B", ["DEATH KNIGHT"] = "C41F3B", ["DRUID"] = "FF7D0A", ["HUNTER"] = "ABD473", ["MAGE"] = "69CCF0", ["PALADIN"] = "F58CBA",
                      ["PRIEST"] = "FFFFFF", ["ROGUE"] = "FFF569", ["SHAMAN"] = "0070DE", ["WARLOCK"] = "9482C9", ["WARRIOR"] = "C79C6E"}
 local InstanceShortNames = {["Icecrown Citadel"] = "ICC", ["Vault of Archavon"] = "VOA", ["Trial of the Crusader"] = "TOC", ["Naxxramas"] = "NAXX", ["The Ruby Sanctum"] = "RS"}

@@ -297,6 +297,13 @@ local Rows = {}
 local Wanted, WantedCount = {}, 0
 local ROW_HEIGHT = 20
 
+-- Dispel options are plain on/off settings (not spell filter keys)
+local DispelOptions = {
+    {setting = "REPORT_DISPELS",     text = "Dispels",      spellId = 527,   what = "Announces who dispels whom and which effect was removed."},
+    {setting = "REPORT_MASSDISPELS", text = "Mass Dispels", spellId = 32375, what = "Also announces Mass Dispel casts. Needs Dispels to be checked as well."},
+}
+local DispelRows = {}
+
 local function GetFilter()
     MPR.Settings["SPELL_FILTER"] = MPR.Settings["SPELL_FILTER"] or {}
     return MPR.Settings["SPELL_FILTER"]
@@ -322,6 +329,9 @@ function MPR_SpellFilter:Refresh()
         if not row.spellId then row.spellId = ResolveId(row.spellName) end
         local icon = row.spellId and select(3, GetSpellInfo(row.spellId))
         row.icon:SetTexture(icon or ICON_FALLBACK)
+    end
+    for _, cb in ipairs(DispelRows) do
+        cb:SetChecked(MPR.Settings[cb.setting])
     end
 end
 
@@ -515,6 +525,58 @@ function MPR_SpellFilter:Initialize()
 
             y = y + ROW_HEIGHT
         end
+    end
+
+    -- Dispels category (top of the list)
+    Title("DISPELS", 13, "20B2AA", 8, 18)
+    for _, d in ipairs(DispelOptions) do
+        n = n + 1
+        local name = "MPR_SpellFilterCB"..n
+        local cb = CreateFrame("CheckButton", name, content, "UICheckButtonTemplate")
+        cb:SetWidth(20)
+        cb:SetHeight(20)
+        cb:SetPoint("TOPLEFT", content, "TOPLEFT", 4, -y)
+        cb:SetHitRectInsets(0, -290, 0, 0)
+
+        local iconFrame = CreateFrame("Frame", nil, content)
+        iconFrame:SetWidth(16)
+        iconFrame:SetHeight(16)
+        iconFrame:SetPoint("TOPLEFT", content, "TOPLEFT", 28, -(y + 2))
+        iconFrame:SetFrameLevel(cb:GetFrameLevel() + 1)
+        local icon = iconFrame:CreateTexture(nil, "OVERLAY")
+        icon:SetAllPoints(iconFrame)
+        icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+        icon:SetTexture(select(3, GetSpellInfo(d.spellId)) or ICON_FALLBACK)
+
+        local text = _G[name.."Text"]
+        text:ClearAllPoints()
+        text:SetPoint("LEFT", iconFrame, "RIGHT", 5, 0)
+        text:SetWidth(225)
+        text:SetJustifyH("LEFT")
+        text:SetFont("Fonts\\FRIZQT__.TTF", 10)
+        text:SetText(d.text)
+
+        local tag = content:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+        tag:SetPoint("TOPLEFT", content, "TOPLEFT", 296, -(y + 5))
+        tag:SetFont("Fonts\\FRIZQT__.TTF", 9)
+        tag:SetTextColor(HexToRGB("20B2AA"))
+        tag:SetText("Dispel")
+
+        cb.setting = d.setting
+        cb:SetScript("OnClick", function(self)
+            MPR.Settings[self.setting] = self:GetChecked() and true or false
+        end)
+        cb:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetHyperlink("spell:"..d.spellId)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine(d.what, 1, 1, 1, true)
+            GameTooltip:Show()
+        end)
+        cb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        table.insert(DispelRows, cb)
+
+        y = y + ROW_HEIGHT
     end
 
     for _, section in ipairs(Catalog) do

@@ -1,6 +1,13 @@
 
 VERSION HISTORY
 
+v3.1R
+ • NEW: Scale slider (50%-150%) that resizes all MPR windows. Saved between sessions.
+ • CHANGED: Opacity slider moved to the bottom of the options window, next to the new Scale slider.
+ • CHANGED: Dispels and Mass Dispels checkboxes moved from the options window to the spell selection window, under a new "Dispels" category at the top.
+ • CHANGED: Killing blow section moved up in the options window.
+ • REMOVED: SeaGreen border color.
+
 v3.0R
  • NEW: Spell selection page (/MPR SPELLS or the "Select spells..." button in /MPR) to choose which spells are reported.
  • NEW: Spells are labelled Player or Encounter. Encounter spells are sorted by instance (Trial of the Crusader, Icecrown Citadel, The Ruby Sanctum), then by boss, then alphabetically. Player spells are grouped by type.
