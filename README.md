@@ -1,8 +1,7 @@
-<tr>
- <td><img width="493" height="432" alt="mpr-main" src="https://github.com/user-attachments/assets/c6e2b3e7-c3e7-4721-8436-9842c3686bdf" /></td>
- <td><img width="493" height="522" alt="mprspells" src="https://github.com/user-attachments/assets/f100582c-a3e8-4bc0-b240-813b0c24aee3" /></td>
-</tr>
-
+<p align="center">
+  <img width="48%" alt="mpr-main" src="https://github.com/user-attachments/assets/c6e2b3e7-c3e7-4721-8436-9842c3686bdf" />
+  <img width="48%" alt="mprspells" src="https://github.com/user-attachments/assets/f100582c-a3e8-4bc0-b240-813b0c24aee3" />
+</p>
 
 
 VERSION HISTORY
